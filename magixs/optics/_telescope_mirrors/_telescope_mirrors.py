@@ -6,17 +6,18 @@ import named_arrays as na
 import optika
 
 __all__ = [
-    "AbstractTelescope",
-    "Telescope",
+    "AbstractTelescopeMirror",
+    "TelescopeMirror",
 ]
 
 
 @dataclasses.dataclass(eq=False, repr=False)
-class AbstractTelescope(
+class AbstractTelescopeMirror(
     optika.mixins.Printable,
 ):
     """
-    An interface describing a Wolter Type-I telescope :cite:p:`Wolter1952`:
+    An interface describing the mirror of a Wolter Type-I telescope
+    :cite:p:`Wolter1952`:
     a paraboloid followed by a confocal hyperboloid, both struck at grazing
     incidence.
 
@@ -55,6 +56,22 @@ class AbstractTelescope(
         """
         The axial length of the hyperboloid, which starts at the
         intersection plane.
+        """
+
+    @property
+    @abc.abstractmethod
+    def angle_start(self) -> u.Quantity | na.AbstractScalar:
+        """
+        The azimuth, measured from the :math:`x` axis, where the illuminated
+        sector of the mirrors starts.
+        """
+
+    @property
+    @abc.abstractmethod
+    def angle_stop(self) -> u.Quantity | na.AbstractScalar:
+        """
+        The azimuth where the illuminated sector of the mirrors stops,
+        counterclockwise from :attr:`angle_start`.
         """
 
     @property
@@ -194,7 +211,10 @@ class AbstractTelescope(
             aperture=optika.apertures.AnnularAperture(
                 radius_inner=self.radius,
                 radius_outer=self._radius_primary(-self.length_primary),
+                angle_start=self.angle_start,
+                angle_stop=self.angle_stop,
             ),
+            is_pupil_stop=True,
             transformation=na.transformations.Cartesian3dTranslation(
                 z=self._z_vertex_primary,
             ),
@@ -225,6 +245,8 @@ class AbstractTelescope(
             aperture=optika.apertures.AnnularAperture(
                 radius_inner=self._radius_secondary(self.length_secondary),
                 radius_outer=self.radius,
+                angle_start=self.angle_start,
+                angle_stop=self.angle_stop,
             ),
             transformation=na.transformations.Cartesian3dTranslation(
                 z=self._center_secondary - a,
@@ -240,11 +262,12 @@ class AbstractTelescope(
 
 
 @dataclasses.dataclass(eq=False, repr=False)
-class Telescope(
-    AbstractTelescope,
+class TelescopeMirror(
+    AbstractTelescopeMirror,
 ):
     """
-    A Wolter Type-I telescope :cite:p:`Wolter1952`: a paraboloid followed by
+    The mirror of a Wolter Type-I telescope :cite:p:`Wolter1952`:
+    a paraboloid followed by
     a confocal hyperboloid, both struck at grazing incidence.
 
     Soft X-rays reflect efficiently only at grazing incidence, so an X-ray
@@ -279,7 +302,7 @@ class Telescope(
         import optika
         import magixs
 
-        telescope = magixs.optics.Telescope(
+        telescope = magixs.optics.TelescopeMirror(
             focal_length=3 * u.m,
             radius=72 * u.mm,
             length_primary=200 * u.mm,
@@ -361,6 +384,19 @@ class Telescope(
     """
     The axial length of the hyperboloid, which starts at the intersection
     plane.
+    """
+
+    angle_start: u.Quantity | na.AbstractScalar = 0 * u.deg
+    """
+    The azimuth, measured from the :math:`x` axis, where the illuminated
+    sector of the mirrors starts.
+    """
+
+    angle_stop: u.Quantity | na.AbstractScalar = 360 * u.deg
+    """
+    The azimuth where the illuminated sector of the mirrors stops,
+    counterclockwise from :attr:`angle_start`.
+    The default illuminates the whole annulus.
     """
 
     material: None | optika.materials.AbstractMaterial = None

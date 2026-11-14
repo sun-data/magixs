@@ -28,19 +28,19 @@ def _z(
 @pytest.mark.parametrize(
     argnames="telescope",
     argvalues=[
-        magixs.optics.Telescope(
+        magixs.optics.TelescopeMirror(
             focal_length=2 * u.m,
             radius=72 * u.mm,
             length_primary=200 * u.mm,
             length_secondary=200 * u.mm,
         ),
-        magixs.optics.Telescope(
+        magixs.optics.TelescopeMirror(
             focal_length=1.09 * u.m,
             radius=73.06 * u.mm,
             length_primary=120 * u.mm,
             length_secondary=80 * u.mm,
         ),
-        magixs.optics.Telescope(
+        magixs.optics.TelescopeMirror(
             focal_length=na.linspace(2, 3, axis="f", num=2) * u.m,
             radius=50 * u.mm,
             length_primary=100 * u.mm,
@@ -48,9 +48,9 @@ def _z(
         ),
     ],
 )
-class TestTelescope:
+class TestTelescopeMirror:
 
-    def test_grazing_angle(self, telescope: magixs.optics.Telescope):
+    def test_grazing_angle(self, telescope: magixs.optics.TelescopeMirror):
         result = telescope.grazing_angle
         assert np.all(result > 0 * u.deg)
         assert np.all(result < 1 * u.deg)
@@ -60,7 +60,7 @@ class TestTelescope:
             telescope.radius / telescope.focal_length,
         )
 
-    def test_surfaces(self, telescope: magixs.optics.Telescope):
+    def test_surfaces(self, telescope: magixs.optics.TelescopeMirror):
         result = telescope.surfaces
         assert len(result) == 2
         primary, secondary = result
@@ -77,7 +77,7 @@ class TestTelescope:
         assert np.all(secondary.aperture.radius_inner < telescope.radius)
         assert np.all(secondary.aperture.radius_inner > 0 * u.mm)
 
-    def test_intersection(self, telescope: magixs.optics.Telescope):
+    def test_intersection(self, telescope: magixs.optics.TelescopeMirror):
         """
         Both mirrors pass through the radius of the telescope at the
         intersection plane, and their apertures end one mirror length away.
@@ -97,7 +97,7 @@ class TestTelescope:
             atol=1 * u.nm,
         )
 
-    def test_slopes(self, telescope: magixs.optics.Telescope):
+    def test_slopes(self, telescope: magixs.optics.TelescopeMirror):
         """
         At the intersection plane the paraboloid is inclined to the axis by
         the grazing angle and the hyperboloid by three times it, so both graze
@@ -112,7 +112,7 @@ class TestTelescope:
             slope = -2 * dr / dz
             assert np.allclose(slope, np.tan(factor * alpha), rtol=1e-5)
 
-    def test_focus(self, telescope: magixs.optics.Telescope):
+    def test_focus(self, telescope: magixs.optics.TelescopeMirror):
         """
         An on-axis annulus of rays must converge to a point at the focus.
         """
